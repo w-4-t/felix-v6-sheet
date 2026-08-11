@@ -1,0 +1,28 @@
+{
+  "name": "Felix Deaqur \u2014 VTM v6 Sheet",
+  "short_name": "Felix V6",
+  "description": "Mobile VTM v6 character sheet and dice roller for Felix Deaqur.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0d0e11",
+  "theme_color": "#111216",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "./apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}
