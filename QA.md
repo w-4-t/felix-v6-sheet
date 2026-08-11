@@ -2,12 +2,12 @@
 
 Result: PASS
 
-- PASS — manifest linked
-- PASS — apple icon linked
-- PASS — service worker registered
-- PASS — relative start_url
-- PASS — relative scope
-- PASS — standalone display
-- PASS — offline shell includes index
-- PASS — no external scripts
-- PASS — GitHub nojekyll
+- PASS — version
+- PASS — attribute rating copied
+- PASS — skill rating copied
+- PASS — focus copied
+- PASS — named preset modifier copied
+- PASS — raw pool copied
+- PASS — PWA manifest
+- PASS — service worker v0.3
+- PASS — nojekyll

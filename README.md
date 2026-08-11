@@ -1,4 +1,4 @@
-# Felix Deaqur — VTM v6 Mobile Sheet v0.2 PWA
+# Felix Deaqur — VTM v6 Mobile Sheet v0.3 PWA
 
 This folder is ready to publish directly with GitHub Pages.
 
@@ -38,3 +38,12 @@ The current package contains only the fictional Felix character sheet/roller.
 
 This is primarily v0.1 converted into a proper installable PWA. Mechanics have intentionally not
 been expanded substantially yet; first test the mobile UX and installation flow.
+
+
+## v0.3 change
+
+Copied roll results now include exact Attribute and Skill ratings and the full pool provenance.
+
+Example:
+
+`Strength 3 + Fighting 3 + Hand-to-Hand Focus +1 + Wrestler +1 = Raw 8, D2 → 6 dice → [9,7,8,8,4,10] → 4S, 10s:1, 1s:0, Q+1`

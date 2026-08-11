@@ -154,7 +154,7 @@ hr{border:0;border-top:1px solid var(--line);margin:12px 0}
         <div class="name">Felix Deaqur</div>
         <div class="sub">Brujah • Gen 11 • GM 1 • Hunter • Scientist</div>
       </div>
-      <div class="version">V6 sheet v0.2 PWA</div>
+      <div class="version">V6 sheet v0.3 PWA</div>
     </div>
     <div class="resources">
       <div class="res">
@@ -282,6 +282,7 @@ hr{border:0;border-top:1px solid var(--line);margin:12px 0}
       </div>
 
       <button class="btn primary" id="rollBtn" style="width:100%">ROLL</button>
+      <div class="small" style="margin-top:7px">Copied result includes exact Attribute/Skill ratings and the full pool breakdown.</div>
 
       <div id="rollResult" aria-live="polite"></div>
     </div>
@@ -374,8 +375,8 @@ const character = {
     {name:"Read person", attr:"Wits", skill:"Awareness", focus:"Insight"},
     {name:"Urban tracking", attr:"Wits", skill:"Survival", focus:"Urban Tracking"},
     {name:"Skulking", attr:"Dexterity", skill:"Subterfuge", focus:"Skulking"},
-    {name:"Intimidation", attr:"Charisma", skill:"Persuasion", focus:"Intimidation", other:1, note:"Includes Intimidating Presence when fiction supports it"},
-    {name:"Tussle", attr:"Strength", skill:"Fighting", focus:"Hand-to-Hand", other:1, note:"Includes Wrestler only for actual Tussle"},
+    {name:"Intimidation", attr:"Charisma", skill:"Persuasion", focus:"Intimidation", other:1, otherLabel:"Intimidating Presence", note:"Includes Intimidating Presence when fiction supports it"},
+    {name:"Tussle", attr:"Strength", skill:"Fighting", focus:"Hand-to-Hand", other:1, otherLabel:"Wrestler", note:"Includes Wrestler only for actual Tussle"},
     {name:"Security systems", attr:"Intelligence", skill:"Sabotage", focus:"Security Systems"},
     {name:"Digital investigation", attr:"Intelligence", skill:"Investigation", focus:"Digital Media"},
     {name:"Heavy firearms", attr:"Dexterity", skill:"Shooting", focus:"Heavy Firearms"}
@@ -490,6 +491,8 @@ function loadPreset(p){
   populateFocus();
   document.getElementById("focusSel").value=p.focus||"";
   document.getElementById("otherMod").value=p.other||0;
+  document.getElementById("otherMod").dataset.source=p.otherLabel||"";
+  document.getElementById("rollBtn").dataset.label="";
   recalc();
 }
 function loadPower(p){
@@ -499,8 +502,10 @@ function loadPower(p){
   document.getElementById("focusSel").value="";
   const satisfiedClanBonus = (p.clanPower && state.vitae>=10) ? 1 : 0;
   document.getElementById("otherMod").value=p.level + satisfiedClanBonus;
-  const satText = satisfiedClanBonus ? " + Satisfied 1" : "";
-  document.getElementById("rollBtn").dataset.label=`${p.discipline} ${p.level} + ${p.attr}${satText}`;
+  document.getElementById("otherMod").dataset.source="";
+  const attrRating=character.attributes[p.attr]||0;
+  const satText = satisfiedClanBonus ? " + Satisfied +1" : "";
+  document.getElementById("rollBtn").dataset.label=`${p.discipline} ${p.level} + ${p.attr} ${attrRating}${satText}`;
   recalc();
 }
 
@@ -536,7 +541,10 @@ function recalc(){
     recalc();
   });
   document.getElementById(id).addEventListener("input",()=>{
-    if(["otherMod"].includes(id)) document.getElementById("rollBtn").dataset.label="";
+    if(["otherMod"].includes(id)){
+      document.getElementById("rollBtn").dataset.label="";
+      document.getElementById("otherMod").dataset.source="";
+    }
     recalc();
   });
 });
@@ -585,9 +593,20 @@ function doRoll(){
     subtitle=`${successes} success${successes===1?"":"es"} • ${tens} ten${tens===1?"":"s"} • ${ones} one${ones===1?"":"s"}`;
   }
 
-  const genericSkill = b.skill==="__none__" ? "Power" : b.skill;
-  const label=document.getElementById("rollBtn").dataset.label || `${b.attr} + ${genericSkill}${b.focus?` (${b.focus})`:""}`;
-  const short=`${label}, D${b.diff}: ${b.final} dice → [${dice.join(",")}] → ${successes}S, 10s:${tens}, 1s:${ones}${qActual?`, Q+${qActual}`:""}`;
+  const customLabel=document.getElementById("rollBtn").dataset.label;
+  const otherSource=document.getElementById("otherMod").dataset.source || "Other";
+  let label;
+  if(customLabel){
+    label=customLabel;
+  }else{
+    const parts=[`${b.attr} ${b.a}`];
+    if(b.skill!=="__none__") parts.push(`${b.skill} ${b.s}`);
+    if(b.focus) parts.push(`${b.focus} Focus +1`);
+    if(b.other) parts.push(`${otherSource} ${b.other>0?"+":""}${b.other}`);
+    if(b.qSpend) parts.push(`Quickening spend +${b.qSpend} die`);
+    label=parts.join(" + ");
+  }
+  const short=`${label} = Raw ${b.raw}, D${b.diff} → ${b.final} dice → [${dice.join(",")}] → ${successes}S, 10s:${tens}, 1s:${ones}${qActual?`, Q+${qActual}`:""}`;
 
   const rr=document.getElementById("rollResult");
   rr.innerHTML=`
