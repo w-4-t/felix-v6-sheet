@@ -1,4 +1,4 @@
-# Felix Deaqur — VTM v6 Mobile Sheet v0.5 PWA
+# Felix Deaqur — VTM v6 Mobile Sheet v0.5.1 PWA
 
 This folder is ready to publish directly with GitHub Pages.
 
@@ -76,3 +76,13 @@ now use touch-friendly steppers:
 `[ − ]   0   [ + ]`
 
 Each tap changes the value by 1, from -10 through +10. The value field is read-only, so Safari does not open a keyboard for it.
+
+
+## v0.5.1
+
+iPhone layout hotfix:
+- modifier steppers are now compact fixed-width controls;
+- each tap button remains 44×44 px;
+- the value display is 48 px wide;
+- the complete stepper is about 146 px wide instead of expanding across the grid column;
+- regular text inputs are now styled consistently.

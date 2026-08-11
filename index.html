@@ -86,7 +86,7 @@ h3{font-size:13px;margin:12px 0 7px;color:var(--muted);text-transform:uppercase;
 .formgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .field{margin:8px 0}
 .field label{display:block;font-size:11px;color:var(--muted);margin:0 0 5px}
-select,input[type="number"],textarea{
+select,input[type="number"],input[type="text"],textarea{
   width:100%;min-height:46px;border-radius:12px;border:1px solid var(--line);
   background:var(--panel2);color:var(--text);padding:10px 11px
 }
@@ -141,24 +141,33 @@ hr{border:0;border-top:1px solid var(--line);margin:12px 0}
 
 .stepper{
   display:grid;
-  grid-template-columns:48px 1fr 48px;
-  gap:7px;
+  grid-template-columns:44px 48px 44px;
+  gap:5px;
   align-items:center;
+  justify-content:center;
 }
 .stepper button{
-  min-height:48px;
-  border-radius:12px;
+  width:44px;
+  height:44px;
+  min-height:44px;
+  padding:0;
+  border-radius:11px;
   border:1px solid var(--line);
   background:var(--panel2);
   color:var(--text);
-  font-size:22px;
+  font-size:21px;
   font-weight:800;
 }
 .stepper input{
+  width:48px;
+  min-width:48px;
+  height:44px;
+  min-height:44px;
+  padding:0 4px;
+  box-sizing:border-box;
   text-align:center;
-  font-size:18px;
+  font-size:17px;
   font-weight:750;
-  min-height:48px;
   cursor:default;
   -webkit-user-select:none;
   user-select:none;
@@ -180,7 +189,7 @@ hr{border:0;border-top:1px solid var(--line);margin:12px 0}
         <div class="name">Felix Deaqur</div>
         <div class="sub">Brujah • Gen 11 • GM 1 • Hunter • Scientist</div>
       </div>
-      <div class="version">V6 sheet v0.5 PWA</div>
+      <div class="version">V6 sheet v0.5.1 PWA</div>
     </div>
     <div class="resources">
       <div class="res">
