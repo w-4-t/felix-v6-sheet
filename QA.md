@@ -3,12 +3,12 @@
 Result: PASS
 
 - PASS — version
-- PASS — dice modifier
-- PASS — dice reason
-- PASS — base difficulty
-- PASS — difficulty modifier
-- PASS — difficulty reason
-- PASS — effective difficulty
-- PASS — separate copied pool
-- PASS — separate copied difficulty
-- PASS — cache v0.4
+- PASS — dice stepper
+- PASS — difficulty stepper
+- PASS — readonly dice value
+- PASS — readonly difficulty value
+- PASS — stepper helper
+- PASS — negative delta button
+- PASS — positive delta button
+- PASS — numeric state stored
+- PASS — cache v0.5

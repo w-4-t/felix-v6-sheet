@@ -138,6 +138,32 @@ hr{border:0;border-top:1px solid var(--line);margin:12px 0}
   .stat{padding-left:4px;padding-right:4px}
   .presetgrid{grid-template-columns:1fr}
 }
+
+.stepper{
+  display:grid;
+  grid-template-columns:48px 1fr 48px;
+  gap:7px;
+  align-items:center;
+}
+.stepper button{
+  min-height:48px;
+  border-radius:12px;
+  border:1px solid var(--line);
+  background:var(--panel2);
+  color:var(--text);
+  font-size:22px;
+  font-weight:800;
+}
+.stepper input{
+  text-align:center;
+  font-size:18px;
+  font-weight:750;
+  min-height:48px;
+  cursor:default;
+  -webkit-user-select:none;
+  user-select:none;
+}
+
 </style>
 
 <link rel="manifest" href="./manifest.webmanifest">
@@ -154,7 +180,7 @@ hr{border:0;border-top:1px solid var(--line);margin:12px 0}
         <div class="name">Felix Deaqur</div>
         <div class="sub">Brujah • Gen 11 • GM 1 • Hunter • Scientist</div>
       </div>
-      <div class="version">V6 sheet v0.4 PWA</div>
+      <div class="version">V6 sheet v0.5 PWA</div>
     </div>
     <div class="resources">
       <div class="res">
@@ -257,7 +283,11 @@ hr{border:0;border-top:1px solid var(--line);margin:12px 0}
         </div>
         <div class="field">
           <label for="diceMod">Dice modifier</label>
-          <input id="diceMod" type="number" inputmode="numeric" min="-10" max="10" value="0">
+          <div class="stepper">
+            <button type="button" class="stepper-btn" data-target="diceMod" data-delta="-1" aria-label="Decrease dice modifier">−</button>
+            <input id="diceMod" type="text" value="0" readonly aria-label="Dice modifier value">
+            <button type="button" class="stepper-btn" data-target="diceMod" data-delta="1" aria-label="Increase dice modifier">+</button>
+          </div>
         </div>
       </div>
 
@@ -273,7 +303,11 @@ hr{border:0;border-top:1px solid var(--line);margin:12px 0}
         </div>
         <div class="field">
           <label for="difficultyMod">Difficulty modifier</label>
-          <input id="difficultyMod" type="number" inputmode="numeric" min="-10" max="10" value="0">
+          <div class="stepper">
+            <button type="button" class="stepper-btn" data-target="difficultyMod" data-delta="-1" aria-label="Decrease Difficulty modifier">−</button>
+            <input id="difficultyMod" type="text" value="0" readonly aria-label="Difficulty modifier value">
+            <button type="button" class="stepper-btn" data-target="difficultyMod" data-delta="1" aria-label="Increase Difficulty modifier">+</button>
+          </div>
         </div>
       </div>
 
@@ -299,7 +333,7 @@ hr{border:0;border-top:1px solid var(--line);margin:12px 0}
       <div class="small" id="modifierBreakdown" style="margin:-2px 0 10px">No situational modifiers.</div>
 
       <button class="btn primary" id="rollBtn" style="width:100%">ROLL</button>
-      <div class="small" style="margin-top:7px">Copied result keeps dice-pool modifiers and Difficulty modifiers separate.</div>
+      <div class="small" style="margin-top:7px">Use − / + buttons for modifiers. Copied result keeps dice-pool and Difficulty modifiers separate.</div>
 
       <div id="rollResult" aria-live="polite"></div>
     </div>
@@ -507,9 +541,9 @@ function loadPreset(p){
   document.getElementById("skillSel").value=p.skill;
   populateFocus();
   document.getElementById("focusSel").value=p.focus||"";
-  document.getElementById("diceMod").value=p.diceMod||0;
+  setStepperValue("diceMod",p.diceMod||0);
   document.getElementById("diceModReason").value=p.diceModLabel||"";
-  document.getElementById("difficultyMod").value=0;
+  setStepperValue("difficultyMod",0);
   document.getElementById("difficultyModReason").value="";
   document.getElementById("rollBtn").dataset.label="";
   recalc();
@@ -520,9 +554,9 @@ function loadPower(p){
   populateFocus();
   document.getElementById("focusSel").value="";
   const satisfiedClanBonus = (p.clanPower && state.vitae>=10) ? 1 : 0;
-  document.getElementById("diceMod").value=p.level + satisfiedClanBonus;
+  setStepperValue("diceMod",p.level + satisfiedClanBonus);
   document.getElementById("diceModReason").value="";
-  document.getElementById("difficultyMod").value=0;
+  setStepperValue("difficultyMod",0);
   document.getElementById("difficultyModReason").value="";
   const attrRating=character.attributes[p.attr]||0;
   const satText = satisfiedClanBonus ? " + Satisfied +1" : "";
@@ -534,10 +568,10 @@ function currentBuild(){
   const attr=document.getElementById("attrSel").value;
   const skill=document.getElementById("skillSel").value;
   const focus=document.getElementById("focusSel").value;
-  const diceMod=Number(document.getElementById("diceMod").value||0);
+  const diceMod=Number(document.getElementById("diceMod").dataset.numeric ?? document.getElementById("diceMod").value ?? 0)||0;
   const diceModReason=document.getElementById("diceModReason").value.trim();
   const baseDiff=clamp(Number(document.getElementById("baseDifficulty").value||0),0,20);
-  const difficultyMod=Number(document.getElementById("difficultyMod").value||0);
+  const difficultyMod=Number(document.getElementById("difficultyMod").dataset.numeric ?? document.getElementById("difficultyMod").value ?? 0)||0;
   const difficultyModReason=document.getElementById("difficultyModReason").value.trim();
   const effectiveDiff=clamp(baseDiff+difficultyMod,0,20);
   const qSpend=Number(document.getElementById("quickSpend").value||0);
@@ -576,7 +610,37 @@ function recalc(){
   btn.textContent=`ROLL ${b.final}`;
   btn.disabled=b.final<=0 || (b.qSpend>state.q);
 }
-["attrSel","skillSel","focusSel","diceMod","diceModReason","baseDifficulty","difficultyMod","difficultyModReason","quickSpend"].forEach(id=>{
+
+function signedDisplay(value){
+  const n=Number(value)||0;
+  return n>0 ? `+${n}` : `${n}`;
+}
+
+function setStepperValue(id, value){
+  const input=document.getElementById(id);
+  const n=clamp(Number(value)||0,-10,10);
+  input.value=signedDisplay(n);
+  input.dataset.numeric=String(n);
+}
+
+document.querySelectorAll(".stepper-btn").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    const id=btn.dataset.target;
+    const delta=Number(btn.dataset.delta)||0;
+    const input=document.getElementById(id);
+    const current=Number(input.dataset.numeric ?? input.value ?? 0)||0;
+    setStepperValue(id,current+delta);
+    if(id==="diceMod"){
+      document.getElementById("rollBtn").dataset.label="";
+    }
+    recalc();
+  });
+});
+
+setStepperValue("diceMod",0);
+setStepperValue("difficultyMod",0);
+
+["attrSel","skillSel","focusSel","diceModReason","baseDifficulty","difficultyModReason","quickSpend"].forEach(id=>{
   document.getElementById(id).addEventListener("change",()=>{
     if(id==="skillSel") populateFocus();
     if(["attrSel","skillSel","focusSel","diceMod","diceModReason"].includes(id)){

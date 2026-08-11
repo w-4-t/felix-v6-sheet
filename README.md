@@ -1,4 +1,4 @@
-# Felix Deaqur — VTM v6 Mobile Sheet v0.4 PWA
+# Felix Deaqur — VTM v6 Mobile Sheet v0.5 PWA
 
 This folder is ready to publish directly with GitHub Pages.
 
@@ -61,3 +61,18 @@ Both modifier types can have an optional reason, which is included in copied res
 
 Example:
 `Strength 3 + Fighting 3 + Hand-to-Hand Focus +1 = Base Pool 7 -1 die (Surprised) = Pool 6; Base D2 +1 (Called Shot) = Effective D3 → 3 dice → [...]`
+
+
+## v0.5
+
+iPhone modifier entry no longer depends on the numeric keyboard.
+
+Both:
+- Dice modifier
+- Difficulty modifier
+
+now use touch-friendly steppers:
+
+`[ − ]   0   [ + ]`
+
+Each tap changes the value by 1, from -10 through +10. The value field is read-only, so Safari does not open a keyboard for it.
