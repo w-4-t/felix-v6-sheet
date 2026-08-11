@@ -154,7 +154,7 @@ hr{border:0;border-top:1px solid var(--line);margin:12px 0}
         <div class="name">Felix Deaqur</div>
         <div class="sub">Brujah • Gen 11 • GM 1 • Hunter • Scientist</div>
       </div>
-      <div class="version">V6 sheet v0.3 PWA</div>
+      <div class="version">V6 sheet v0.4 PWA</div>
     </div>
     <div class="resources">
       <div class="res">
@@ -256,33 +256,50 @@ hr{border:0;border-top:1px solid var(--line);margin:12px 0}
           <select id="focusSel"></select>
         </div>
         <div class="field">
-          <label for="otherMod">Other modifier</label>
-          <input id="otherMod" type="number" inputmode="numeric" min="-10" max="10" value="0">
+          <label for="diceMod">Dice modifier</label>
+          <input id="diceMod" type="number" inputmode="numeric" min="-10" max="10" value="0">
         </div>
+      </div>
+
+      <div class="field">
+        <label for="diceModReason">Dice modifier reason (optional)</label>
+        <input id="diceModReason" type="text" autocomplete="off" placeholder="e.g. Surprised, cover, item bonus">
       </div>
 
       <div class="formgrid">
         <div class="field">
-          <label for="difficulty">Difficulty</label>
-          <input id="difficulty" type="number" inputmode="numeric" min="0" max="20" value="2">
+          <label for="baseDifficulty">Base Difficulty</label>
+          <input id="baseDifficulty" type="number" inputmode="numeric" min="0" max="20" value="2">
         </div>
         <div class="field">
-          <label for="quickSpend">Quickening spend</label>
-          <select id="quickSpend">
-            <option value="0">0</option>
-            <option value="1">1 → +1 die</option>
-          </select>
+          <label for="difficultyMod">Difficulty modifier</label>
+          <input id="difficultyMod" type="number" inputmode="numeric" min="-10" max="10" value="0">
         </div>
+      </div>
+
+      <div class="field">
+        <label for="difficultyModReason">Difficulty modifier reason (optional)</label>
+        <input id="difficultyModReason" type="text" autocomplete="off" placeholder="e.g. Called Shot, Prepared Site">
+      </div>
+
+      <div class="field">
+        <label for="quickSpend">Quickening spend</label>
+        <select id="quickSpend">
+          <option value="0">0</option>
+          <option value="1">1 → +1 die</option>
+        </select>
       </div>
 
       <div class="roll-summary">
-        <div class="metric"><div class="m-lab">Raw</div><div class="m-val" id="rawPool">0</div></div>
-        <div class="metric"><div class="m-lab">Difficulty</div><div class="m-val" id="diffPool">2</div></div>
+        <div class="metric"><div class="m-lab">Pool</div><div class="m-val" id="rawPool">0</div></div>
+        <div class="metric"><div class="m-lab">Effective D</div><div class="m-val" id="diffPool">2</div></div>
         <div class="metric"><div class="m-lab">Final</div><div class="m-val" id="finalPool">0</div></div>
       </div>
 
+      <div class="small" id="modifierBreakdown" style="margin:-2px 0 10px">No situational modifiers.</div>
+
       <button class="btn primary" id="rollBtn" style="width:100%">ROLL</button>
-      <div class="small" style="margin-top:7px">Copied result includes exact Attribute/Skill ratings and the full pool breakdown.</div>
+      <div class="small" style="margin-top:7px">Copied result keeps dice-pool modifiers and Difficulty modifiers separate.</div>
 
       <div id="rollResult" aria-live="polite"></div>
     </div>
@@ -375,8 +392,8 @@ const character = {
     {name:"Read person", attr:"Wits", skill:"Awareness", focus:"Insight"},
     {name:"Urban tracking", attr:"Wits", skill:"Survival", focus:"Urban Tracking"},
     {name:"Skulking", attr:"Dexterity", skill:"Subterfuge", focus:"Skulking"},
-    {name:"Intimidation", attr:"Charisma", skill:"Persuasion", focus:"Intimidation", other:1, otherLabel:"Intimidating Presence", note:"Includes Intimidating Presence when fiction supports it"},
-    {name:"Tussle", attr:"Strength", skill:"Fighting", focus:"Hand-to-Hand", other:1, otherLabel:"Wrestler", note:"Includes Wrestler only for actual Tussle"},
+    {name:"Intimidation", attr:"Charisma", skill:"Persuasion", focus:"Intimidation", diceMod:1, diceModLabel:"Intimidating Presence", note:"Includes Intimidating Presence when fiction supports it"},
+    {name:"Tussle", attr:"Strength", skill:"Fighting", focus:"Hand-to-Hand", diceMod:1, diceModLabel:"Wrestler", note:"Includes Wrestler only for actual Tussle"},
     {name:"Security systems", attr:"Intelligence", skill:"Sabotage", focus:"Security Systems"},
     {name:"Digital investigation", attr:"Intelligence", skill:"Investigation", focus:"Digital Media"},
     {name:"Heavy firearms", attr:"Dexterity", skill:"Shooting", focus:"Heavy Firearms"}
@@ -490,8 +507,10 @@ function loadPreset(p){
   document.getElementById("skillSel").value=p.skill;
   populateFocus();
   document.getElementById("focusSel").value=p.focus||"";
-  document.getElementById("otherMod").value=p.other||0;
-  document.getElementById("otherMod").dataset.source=p.otherLabel||"";
+  document.getElementById("diceMod").value=p.diceMod||0;
+  document.getElementById("diceModReason").value=p.diceModLabel||"";
+  document.getElementById("difficultyMod").value=0;
+  document.getElementById("difficultyModReason").value="";
   document.getElementById("rollBtn").dataset.label="";
   recalc();
 }
@@ -501,8 +520,10 @@ function loadPower(p){
   populateFocus();
   document.getElementById("focusSel").value="";
   const satisfiedClanBonus = (p.clanPower && state.vitae>=10) ? 1 : 0;
-  document.getElementById("otherMod").value=p.level + satisfiedClanBonus;
-  document.getElementById("otherMod").dataset.source="";
+  document.getElementById("diceMod").value=p.level + satisfiedClanBonus;
+  document.getElementById("diceModReason").value="";
+  document.getElementById("difficultyMod").value=0;
+  document.getElementById("difficultyModReason").value="";
   const attrRating=character.attributes[p.attr]||0;
   const satText = satisfiedClanBonus ? " + Satisfied +1" : "";
   document.getElementById("rollBtn").dataset.label=`${p.discipline} ${p.level} + ${p.attr} ${attrRating}${satText}`;
@@ -513,37 +534,59 @@ function currentBuild(){
   const attr=document.getElementById("attrSel").value;
   const skill=document.getElementById("skillSel").value;
   const focus=document.getElementById("focusSel").value;
-  const other=Number(document.getElementById("otherMod").value||0);
-  const diff=clamp(Number(document.getElementById("difficulty").value||0),0,20);
+  const diceMod=Number(document.getElementById("diceMod").value||0);
+  const diceModReason=document.getElementById("diceModReason").value.trim();
+  const baseDiff=clamp(Number(document.getElementById("baseDifficulty").value||0),0,20);
+  const difficultyMod=Number(document.getElementById("difficultyMod").value||0);
+  const difficultyModReason=document.getElementById("difficultyModReason").value.trim();
+  const effectiveDiff=clamp(baseDiff+difficultyMod,0,20);
   const qSpend=Number(document.getElementById("quickSpend").value||0);
   const a=character.attributes[attr]||0;
   const s=skill==="__none__" ? 0 : (character.skills[skill]?.rating||0);
   const f=focus?1:0;
-  const raw=a+s+f+other+qSpend;
-  const final=Math.max(0,raw-diff);
-  return {attr,skill,focus,other,diff,qSpend,a,s,f,raw,final};
+  const basePool=a+s+f;
+  const raw=basePool+diceMod+qSpend;
+  const final=Math.max(0,raw-effectiveDiff);
+  return {
+    attr,skill,focus,a,s,f,basePool,
+    diceMod,diceModReason,
+    baseDiff,difficultyMod,difficultyModReason,effectiveDiff,
+    qSpend,raw,final
+  };
 }
 function recalc(){
   const b=currentBuild();
   document.getElementById("rawPool").textContent=b.raw;
-  document.getElementById("diffPool").textContent=b.diff;
+  document.getElementById("diffPool").textContent=b.effectiveDiff;
   document.getElementById("finalPool").textContent=b.final;
+
+  const bits=[];
+  if(b.diceMod){
+    const reason=b.diceModReason ? ` (${b.diceModReason})` : "";
+    bits.push(`Dice ${b.diceMod>0?"+":""}${b.diceMod}${reason}`);
+  }
+  if(b.difficultyMod){
+    const reason=b.difficultyModReason ? ` (${b.difficultyModReason})` : "";
+    bits.push(`Difficulty ${b.difficultyMod>0?"+":""}${b.difficultyMod}${reason}`);
+  }
+  document.getElementById("modifierBreakdown").textContent =
+    bits.length ? bits.join(" • ") : "No situational modifiers.";
+
   const btn=document.getElementById("rollBtn");
   btn.textContent=`ROLL ${b.final}`;
   btn.disabled=b.final<=0 || (b.qSpend>state.q);
 }
-["attrSel","skillSel","focusSel","otherMod","difficulty","quickSpend"].forEach(id=>{
+["attrSel","skillSel","focusSel","diceMod","diceModReason","baseDifficulty","difficultyMod","difficultyModReason","quickSpend"].forEach(id=>{
   document.getElementById(id).addEventListener("change",()=>{
     if(id==="skillSel") populateFocus();
-    if(["attrSel","skillSel","focusSel","otherMod"].includes(id)){
+    if(["attrSel","skillSel","focusSel","diceMod","diceModReason"].includes(id)){
       document.getElementById("rollBtn").dataset.label="";
     }
     recalc();
   });
   document.getElementById(id).addEventListener("input",()=>{
-    if(["otherMod"].includes(id)){
+    if(["diceMod","diceModReason"].includes(id)){
       document.getElementById("rollBtn").dataset.label="";
-      document.getElementById("otherMod").dataset.source="";
     }
     recalc();
   });
@@ -594,7 +637,6 @@ function doRoll(){
   }
 
   const customLabel=document.getElementById("rollBtn").dataset.label;
-  const otherSource=document.getElementById("otherMod").dataset.source || "Other";
   let label;
   if(customLabel){
     label=customLabel;
@@ -602,11 +644,27 @@ function doRoll(){
     const parts=[`${b.attr} ${b.a}`];
     if(b.skill!=="__none__") parts.push(`${b.skill} ${b.s}`);
     if(b.focus) parts.push(`${b.focus} Focus +1`);
-    if(b.other) parts.push(`${otherSource} ${b.other>0?"+":""}${b.other}`);
-    if(b.qSpend) parts.push(`Quickening spend +${b.qSpend} die`);
     label=parts.join(" + ");
   }
-  const short=`${label} = Raw ${b.raw}, D${b.diff} → ${b.final} dice → [${dice.join(",")}] → ${successes}S, 10s:${tens}, 1s:${ones}${qActual?`, Q+${qActual}`:""}`;
+
+  let poolText=`${label} = Base Pool ${b.basePool}`;
+  if(b.diceMod){
+    const reason=b.diceModReason ? ` (${b.diceModReason})` : "";
+    poolText+=` ${b.diceMod>0?"+":""}${b.diceMod} die${Math.abs(b.diceMod)===1?"":"s"}${reason}`;
+  }
+  if(b.qSpend){
+    poolText+=` +${b.qSpend} die (Quickening)`;
+  }
+  poolText+=` = Pool ${b.raw}`;
+
+  let diffText=`Base D${b.baseDiff}`;
+  if(b.difficultyMod){
+    const reason=b.difficultyModReason ? ` (${b.difficultyModReason})` : "";
+    diffText+=` ${b.difficultyMod>0?"+":""}${b.difficultyMod}${reason}`;
+  }
+  diffText+=` = Effective D${b.effectiveDiff}`;
+
+  const short=`${poolText}; ${diffText} → ${b.final} dice → [${dice.join(",")}] → ${successes}S, 10s:${tens}, 1s:${ones}${qActual?`, Q+${qActual}`:""}`;
 
   const rr=document.getElementById("rollResult");
   rr.innerHTML=`

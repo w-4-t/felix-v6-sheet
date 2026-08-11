@@ -1,4 +1,4 @@
-# Felix Deaqur — VTM v6 Mobile Sheet v0.3 PWA
+# Felix Deaqur — VTM v6 Mobile Sheet v0.4 PWA
 
 This folder is ready to publish directly with GitHub Pages.
 
@@ -47,3 +47,17 @@ Copied roll results now include exact Attribute and Skill ratings and the full p
 Example:
 
 `Strength 3 + Fighting 3 + Hand-to-Hand Focus +1 + Wrestler +1 = Raw 8, D2 → 6 dice → [9,7,8,8,4,10] → 4S, 10s:1, 1s:0, Q+1`
+
+
+## v0.4
+
+Roll Builder now separates:
+- Dice modifier
+- Base Difficulty
+- Difficulty modifier
+- Effective Difficulty
+
+Both modifier types can have an optional reason, which is included in copied results.
+
+Example:
+`Strength 3 + Fighting 3 + Hand-to-Hand Focus +1 = Base Pool 7 -1 die (Surprised) = Pool 6; Base D2 +1 (Called Shot) = Effective D3 → 3 dice → [...]`
