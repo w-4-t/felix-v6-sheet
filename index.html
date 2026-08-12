@@ -36,10 +36,10 @@ button{touch-action:manipulation}
   padding:calc(10px + env(safe-area-inset-top)) 12px 10px;
   border-bottom:1px solid var(--line)
 }
-.identity{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.identity{display:flex;justify-content:space-between;gap:8px;align-items:center}
 .name{font-size:20px;font-weight:700;letter-spacing:.2px}
 .sub{font-size:12px;color:var(--muted);margin-top:3px}
-.version{font-size:11px;color:var(--muted);padding-top:3px}
+.version{font-size:10px;color:var(--muted);white-space:nowrap;flex:0 0 auto;padding:2px 6px;border:1px solid var(--line);border-radius:999px}
 .resources{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}
 .res{
   min-width:0;border:1px solid var(--line);background:var(--panel);
@@ -173,6 +173,19 @@ hr{border:0;border-top:1px solid var(--line);margin:12px 0}
   user-select:none;
 }
 
+.res.baneful-active{
+  border-color:#925f5f;
+  background:rgba(120,45,45,.22);
+}
+.res.vitae-baneful{
+  border-color:#745454;
+}
+.res .max-muted{
+  color:var(--muted);
+  font-size:.70em;
+  font-weight:650;
+}
+
 </style>
 
 <link rel="manifest" href="./manifest.webmanifest">
@@ -189,24 +202,24 @@ hr{border:0;border-top:1px solid var(--line);margin:12px 0}
         <div class="name">Felix Deaqur</div>
         <div class="sub">Brujah • Gen 11 • GM 1 • Hunter • Scientist</div>
       </div>
-      <div class="version">V6 sheet v0.5.1 PWA</div>
+      <div class="version">v0.6.1</div>
     </div>
     <div class="resources">
-      <div class="res">
-        <label>Vitae</label><div class="value" id="vitaeVal">12</div>
+      <div class="res" id="vitaeCard">
+        <label>Vitae</label><div class="value" id="vitaeVal">12<span class="max-muted">/12</span></div>
         <div class="ctrl"><button class="mini" data-res="vitae" data-delta="-1">−</button><button class="mini" data-res="vitae" data-delta="1">+</button></div>
       </div>
       <div class="res">
-        <label>Willpower</label><div class="value" id="wpVal">12</div>
+        <label>Willpower</label><div class="value" id="wpVal">12<span class="max-muted">/12</span></div>
         <div class="ctrl"><button class="mini" data-res="wp" data-delta="-1">−</button><button class="mini" data-res="wp" data-delta="1">+</button></div>
       </div>
       <div class="res">
-        <label>Quickening</label><div class="value" id="qVal">0</div>
+        <label>Quickening</label><div class="value" id="qVal">0<span class="max-muted">/5</span></div>
         <div class="ctrl"><button class="mini" data-res="q" data-delta="-1">−</button><button class="mini" data-res="q" data-delta="1">+</button></div>
       </div>
-      <div class="res">
-        <label>Damage</label><div class="value" id="dmgVal">0</div>
-        <div class="ctrl"><button class="mini" data-res="dmg" data-delta="-1">−</button><button class="mini" data-res="dmg" data-delta="1">+</button></div>
+      <div class="res" id="banefulCard">
+        <label>Baneful</label><div class="value" id="banefulVal">0<span class="max-muted">/12</span></div>
+        <div class="ctrl"><button class="mini" data-res="baneful" data-delta="-1">−</button><button class="mini" data-res="baneful" data-delta="1">+</button></div>
       </div>
     </div>
   </div>
@@ -371,7 +384,7 @@ hr{border:0;border-top:1px solid var(--line);margin:12px 0}
       <div class="rule">Build Attribute + Skill + applicable Focus / bonuses.</div>
       <div class="rule">Subtract Difficulty <strong>before rolling</strong>.</div>
       <div class="rule">8 / 9 / 10 = success.</div>
-      <div class="rule">Each rolled 10 gives +1 Quickening, up to max 5.</div>
+      <div class="rule">Each rolled 10 generates +1 Quickening. The roll reports it, but the counter changes only after you press Apply Q.</div>
       <div class="rule">0 successes + at least one 1 = <strong>Painful Failure</strong>.</div>
       <div class="rule">0 successes + no 1 = ordinary <strong>Failure</strong>.</div>
       <div class="rule">1 / 2 / 3 / 4 / 5 successes = Basic / Strong / Exceptional / Incredible / Extraordinary.</div>
@@ -443,13 +456,23 @@ const character = {
   ]
 };
 
-const defaults = {vitae:12, wp:12, q:0, dmg:0, notes:"", history:[]};
+const VITAE_MAX = 10 + character.attributes.Stamina;
+const WILLPOWER_MAX = 5 + character.attributes.Composure + character.attributes.Resolve;
+const QUICKENING_MAX = 5;
+
+const defaults = {vitae:12, wp:12, q:0, baneful:0, notes:"", history:[]};
 let state = loadState();
 
 function loadState(){
   try{
     const raw = localStorage.getItem("felix_v6_v01");
-    if(raw) return {...defaults, ...JSON.parse(raw)};
+    if(raw){
+      const saved = JSON.parse(raw);
+      const merged = {...defaults, ...saved};
+      if(typeof saved.baneful !== "number") merged.baneful = 0;
+      delete merged.dmg;
+      return merged;
+    }
   }catch(e){}
   return {...defaults};
 }
@@ -457,18 +480,47 @@ function saveState(){
   try{ localStorage.setItem("felix_v6_v01", JSON.stringify(state)); }catch(e){}
 }
 function clamp(v,min,max){ return Math.max(min,Math.min(max,v)); }
+function vitaeEffectiveMax(){
+  return clamp(VITAE_MAX - (state.baneful||0), 0, VITAE_MAX);
+}
+function resourceFraction(current,max){
+  return `${current}<span class="max-muted">/${max}</span>`;
+}
 function updateResourceUI(){
-  document.getElementById("vitaeVal").textContent = state.vitae;
-  document.getElementById("wpVal").textContent = state.wp;
-  document.getElementById("qVal").textContent = state.q;
-  document.getElementById("dmgVal").textContent = state.dmg;
-  document.getElementById("vitaeState").textContent = state.vitae >= 10 ? "Satisfied" : "Track manually";
+  state.baneful = clamp(state.baneful||0,0,VITAE_MAX);
+  const effectiveMax = vitaeEffectiveMax();
+  state.vitae = clamp(state.vitae||0,0,effectiveMax);
+  state.wp = clamp(state.wp||0,0,WILLPOWER_MAX);
+  state.q = clamp(state.q||0,0,QUICKENING_MAX);
+
+  document.getElementById("vitaeVal").innerHTML = resourceFraction(state.vitae,effectiveMax);
+  document.getElementById("wpVal").innerHTML = resourceFraction(state.wp,WILLPOWER_MAX);
+  document.getElementById("qVal").innerHTML = resourceFraction(state.q,QUICKENING_MAX);
+  document.getElementById("banefulVal").innerHTML = resourceFraction(state.baneful,VITAE_MAX);
+
+  const hasBaneful = state.baneful > 0;
+  document.getElementById("banefulCard").classList.toggle("baneful-active",hasBaneful);
+  document.getElementById("vitaeCard").classList.toggle("vitae-baneful",hasBaneful);
+
+  let vitaeState = "Torpor";
+  if(state.vitae >= 11) vitaeState = "Satisfied";
+  else if(state.vitae >= 6) vitaeState = "Thirsty";
+  else if(state.vitae >= 1) vitaeState = "Hungry";
+  document.getElementById("vitaeState").textContent = vitaeState;
 }
 document.querySelectorAll("[data-res]").forEach(btn=>{
   btn.addEventListener("click",()=>{
     const key=btn.dataset.res, d=Number(btn.dataset.delta);
-    const max = key==="q" ? 5 : key==="dmg" ? 20 : 12;
-    state[key]=clamp((state[key]||0)+d,0,max);
+    if(key==="vitae"){
+      state.vitae = clamp((state.vitae||0)+d,0,vitaeEffectiveMax());
+    }else if(key==="wp"){
+      state.wp = clamp((state.wp||0)+d,0,WILLPOWER_MAX);
+    }else if(key==="q"){
+      state.q = clamp((state.q||0)+d,0,QUICKENING_MAX);
+    }else if(key==="baneful"){
+      state.baneful = clamp((state.baneful||0)+d,0,VITAE_MAX);
+      state.vitae = clamp(state.vitae||0,0,vitaeEffectiveMax());
+    }
     saveState(); updateResourceUI(); recalc();
   });
 });
@@ -562,7 +614,7 @@ function loadPower(p){
   document.getElementById("skillSel").value="__none__";
   populateFocus();
   document.getElementById("focusSel").value="";
-  const satisfiedClanBonus = (p.clanPower && state.vitae>=10) ? 1 : 0;
+  const satisfiedClanBonus = (p.clanPower && state.vitae>=11) ? 1 : 0;
   setStepperValue("diceMod",p.level + satisfiedClanBonus);
   document.getElementById("diceModReason").value="";
   setStepperValue("difficultyMod",0);
@@ -693,9 +745,10 @@ function doRoll(){
   const tens=dice.filter(d=>d===10).length;
   const ones=dice.filter(d=>d===1).length;
 
-  const qBefore=state.q;
-  state.q=clamp(state.q+tens,0,5);
-  const qActual=state.q-qBefore;
+  const qGenerated=tens;
+  const qCapacity=Math.max(0,QUICKENING_MAX-state.q);
+  const qApplicable=Math.min(qGenerated,qCapacity);
+  const qOverflow=Math.max(0,qGenerated-qApplicable);
 
   let title, subtitle;
   if(successes===0 && ones>0){
@@ -737,17 +790,39 @@ function doRoll(){
   }
   diffText+=` = Effective D${b.effectiveDiff}`;
 
-  const short=`${poolText}; ${diffText} → ${b.final} dice → [${dice.join(",")}] → ${successes}S, 10s:${tens}, 1s:${ones}${qActual?`, Q+${qActual}`:""}`;
+  const short=`${poolText}; ${diffText} → ${b.final} dice → [${dice.join(",")}] → ${successes}S, 10s:${tens}, 1s:${ones}${qGenerated?`, Q gain:+${qGenerated} pending`:""}`;
+
+  const qPendingText = qGenerated
+    ? ` • Quickening generated: +${qGenerated} (pending)${qOverflow?` • ${qOverflow} exceeds Q5`:""}`
+    : "";
 
   const rr=document.getElementById("rollResult");
   rr.innerHTML=`
     <div class="dice">${dice.map(d=>`<div class="die ${d>=8?"success":""} ${d===10?"ten":""} ${d===1?"one":""}">${d}</div>`).join("")}</div>
     <div class="result">
       <div class="result-title">${title}</div>
-      <div class="result-sub">${subtitle}${tens?` • Quickening gained: ${qActual}${qActual<tens?" (capped at 5)":""}`:""}</div>
+      <div class="result-sub">${subtitle}${qPendingText}</div>
+      ${qGenerated?`<button class="btn" id="applyQBtn" style="width:100%;margin-top:9px"${qApplicable<=0?" disabled":""}>${qApplicable>0?`Apply Q +${qApplicable}`:"Q already full"}</button><div class="small" id="qApplyStatus" style="margin-top:6px"></div>`:""}
       <textarea id="copyText" readonly style="min-height:76px;margin-top:9px">${short}</textarea>
       <button class="btn good" id="copyBtn" style="width:100%;margin-top:7px">Copy result</button>
     </div>`;
+
+  if(qGenerated && qApplicable>0){
+    document.getElementById("applyQBtn").addEventListener("click",()=>{
+      const capacityNow=Math.max(0,QUICKENING_MAX-state.q);
+      const applied=Math.min(qGenerated,capacityNow);
+      const overflowNow=Math.max(0,qGenerated-applied);
+      state.q=clamp(state.q+applied,0,QUICKENING_MAX);
+      saveState(); updateResourceUI(); recalc();
+
+      const btn=document.getElementById("applyQBtn");
+      btn.disabled=true;
+      btn.textContent=`Applied Q +${applied}`;
+      document.getElementById("qApplyStatus").textContent = overflowNow
+        ? `${overflowNow} excess Quickening remains; resolve excess separately.`
+        : "Quickening applied.";
+    });
+  }
 
   document.getElementById("copyBtn").addEventListener("click",copyResult);
   state.history.unshift({time:new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"}), text:short, title});

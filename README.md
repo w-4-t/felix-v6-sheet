@@ -88,15 +88,17 @@ iPhone layout hotfix:
 - regular text inputs are now styled consistently.
 
 
-## v0.6
+## v0.6.1
 
-Resource/UI corrections:
-- `Damage` removed.
-- `Baneful` added. It reduces effective maximum Vitae and is visually highlighted while non-zero.
-- Vitae displays `current / effective maximum`.
-- Willpower displays `current / maximum`.
-- Quickening displays `current / 5`.
-- Baneful displays `marked / 12`.
-- Rolled 10s no longer automatically change the Quickening counter. The result reports pending Quickening and offers an explicit Apply button.
-- The header version marker is shortened to `v0.6` and forced to one line.
-- Satisfied threshold corrected to 11+ Vitae for the automatic Brujah clan Discipline Power-test bonus.
+Corrected build after the v0.6 packaging error.
+
+Actual `index.html` changes:
+- Damage removed; Baneful added.
+- Vitae: current / effective maximum.
+- Willpower: current / maximum.
+- Quickening: current / 5.
+- Baneful: marked / 12, visually highlighted while non-zero.
+- Baneful lowers effective maximum Vitae.
+- Rolled 10s report pending Quickening and do not alter the Q counter until `Apply Q` is pressed.
+- Header version shortened to a compact single-line badge.
+- Satisfied threshold used by the clan Discipline bonus is 11+ Vitae.
