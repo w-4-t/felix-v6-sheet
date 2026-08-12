@@ -86,3 +86,17 @@ iPhone layout hotfix:
 - the value display is 48 px wide;
 - the complete stepper is about 146 px wide instead of expanding across the grid column;
 - regular text inputs are now styled consistently.
+
+
+## v0.6
+
+Resource/UI corrections:
+- `Damage` removed.
+- `Baneful` added. It reduces effective maximum Vitae and is visually highlighted while non-zero.
+- Vitae displays `current / effective maximum`.
+- Willpower displays `current / maximum`.
+- Quickening displays `current / 5`.
+- Baneful displays `marked / 12`.
+- Rolled 10s no longer automatically change the Quickening counter. The result reports pending Quickening and offers an explicit Apply button.
+- The header version marker is shortened to `v0.6` and forced to one line.
+- Satisfied threshold corrected to 11+ Vitae for the automatic Brujah clan Discipline Power-test bonus.

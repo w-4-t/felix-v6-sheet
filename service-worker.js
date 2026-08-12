@@ -1,4 +1,4 @@
-const CACHE_NAME = "felix-v6-sheet-v0-5-1";
+const CACHE_NAME = "felix-v6-sheet-v0-6";
 const APP_SHELL = [
   "./",
   "./index.html",
